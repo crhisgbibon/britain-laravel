@@ -20,7 +20,7 @@
       loading="lazy"
       allowfullscreen
       referrerpolicy="no-referrer-when-downgrade"
-      src="https://www.google.com/maps/embed/v1/place?key=AIzaSyDUVSRRNyPQUBusuyAvq7FU1MqTr3oe2lQ
+      src="https://www.google.com/maps/embed/v1/place?key=
         &q=Space+Needle,Seattle+WA">
     </iframe>
     </body>
