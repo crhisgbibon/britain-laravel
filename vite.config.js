@@ -12,6 +12,7 @@ export default defineConfig({
               'resources/js/map1.js',
               'resources/js/map2.js',
               'resources/js/map3.js',
+              'resources/js/map4.js',
             ],
             refresh: true,
         }),
