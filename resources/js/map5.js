@@ -66,36 +66,15 @@ let cities = [
 ];
 
 const CONTAINER = document.getElementById('container');
+const LOCATION = document.getElementById('location');
 const C = document.getElementById('c');
 const CANVAS = C.getContext('2d');
 const CW = 1010.33;
 const CH = 927.15;
 
-let levels = [
-  [ CW, CH ],
-  [ CW / 2, CH / 2 ],
-  [ CW / 3, CH / 3 ],
-  [ CW / 4, CH / 4 ],
-  [ CW / 5, CH / 5 ],
-  [ CW / 6, CH / 6 ],
-  [ CW / 7, CH / 7 ],
-  [ CW / 8, CH / 8 ],
-  [ CW / 9, CH / 9 ],
-  [ CW / 10, CH / 10 ],
-  [ CW / 11, CH / 11 ],
-  [ CW / 12, CH / 12 ],
-  [ CW / 13, CH / 13 ],
-  [ CW / 14, CH / 14 ],
-  [ CW / 15, CH / 15 ],
-  [ CW / 16, CH / 16 ],
-  [ CW / 17, CH / 17 ],
-  [ CW / 18, CH / 18 ],
-  [ CW / 19, CH / 19 ],
-  [ CW / 20, CH / 20 ],
-];
-
 let width = window.innerWidth,
     height = window.innerHeight,
+    vh = 0.975,
     buffer = 1,
     lat, // n-s
     long, // e-w
@@ -105,13 +84,10 @@ let width = window.innerWidth,
     long0 = 169.1110266,
     x0 = 0,
     y0 = 0,
-    north,
-    south,
-    east,
-    west,
+    levelCount = 50,
     zoom = 1,
     minZoom = 1,
-    maxZoom = 20,
+    maxZoom = levelCount,
     fit = 1,
     offsetX = 0,
     offsetY = 0,
@@ -119,6 +95,15 @@ let width = window.innerWidth,
     start = new Vector(0, 0),
     end = new Vector(0, 0),
     geo = new Vector(0, 0);
+
+
+let levels = [];
+for(let i = 0; i < levelCount; i++)
+{
+  let n = i + 1;
+  let l = [CW / n, CH / n];
+  levels.push(l);
+}
 
 const I = document.createElement('img');
 I.onload = function () {
@@ -133,6 +118,7 @@ window.onkeydown = function(event)
     if(zoom > minZoom)
     {
       zoom--;
+      ResetOffset(true);
     }
   }
 
@@ -141,6 +127,7 @@ window.onkeydown = function(event)
     if(zoom < maxZoom)
     {
       zoom++;
+      ResetOffset(false);
     }
   }
 
@@ -158,6 +145,7 @@ window.onwheel = function(event)
     if(zoom > minZoom)
     {
       zoom--;
+      ResetOffset(true);
     }
   }
   if(event.deltaY < 0)
@@ -165,6 +153,7 @@ window.onwheel = function(event)
     if(zoom < maxZoom)
     {
       zoom++;
+      ResetOffset(false);
     }
   }
   Draw();
@@ -192,10 +181,7 @@ window.onmousemove = function(event)
   let x = event.clientX - rect.left;
   let y = event.clientY - rect.top;
 
-  geo.x = x;
-  geo.y = y;
-  console.log('geo is ' + geo.x + ', ' + geo.y);
-  GetLocation(geo.x, geo.y);
+  GetLocation(x, y);
 
   if(!dragging) return;
 
@@ -205,47 +191,6 @@ window.onmousemove = function(event)
   start.x = x;
   start.y = y;
   Draw();
-}
-
-function GetLocation(x, y)
-{
-  // x = x - offsetX;
-  // y = y - offsetY;
-  let latitude  = 0; // (φ)
-  let longitude = 0; // (λ)
-
-  let mapWidth  = CW;
-  let mapHeight = CH;
-
-  // get longitude value
-  // let x = ( longitude + long0 ) * ( mapWidth / longLines );
-  longitude = ( x / ( mapWidth / longLines ) ) - long0;
-  if(longitude < -long0) longitude = -long0;
-  if(longitude > (longLines-long0)) longitude = (longLines-long0);
-  console.log('longitude is ' + longitude);
-
-  let mercN = ( ( mapHeight / 2 ) * ( 2 * Math.PI ) ) / mapWidth;
-
-  
-
-
-  // convert from degrees to radians
-  // let latRad = latitude * Math.PI / 180;
-
-  // // get y value
-  // let mercN = Math.log( Math.tan( ( Math.PI / 4 ) + ( latRad / 2 ) ) );
-  // let y = ( mapHeight / 2 ) - ( mapWidth * mercN / ( 2 * Math.PI ) );
-  
-  // return {x: x, y: y};
-  // let north = offsetY;
-  // let south = offsetY + levels[zoom - 1][1];
-  // let east = offsetX;
-  // let west = offsetX + levels[zoom - 1][0];
-
-  // console.log('north is ' + north);
-  // console.log('south is ' + south);
-  // console.log('east is ' + east);
-  // console.log('west is ' + west);
 }
 
 window.onmouseup = function(event)
@@ -281,7 +226,7 @@ function ResetView()
 function Draw()
 {
   width = window.innerWidth * buffer;
-  height = window.innerHeight * buffer;
+  height = (window.innerHeight * vh) * buffer;
 
   lat = CH / latLines;
   long = CW / longLines;
@@ -376,9 +321,6 @@ function Draw()
 
 function MapPos(latitude, longitude)
 {
-  // latitude  = 41.145556; // (φ)
-  // longitude = -73.995;   // (λ)
-
   let mapWidth  = CW;
   let mapHeight = CH;
 
@@ -393,6 +335,57 @@ function MapPos(latitude, longitude)
   let y = ( mapHeight / 2 ) - ( mapWidth * mercN / ( 2 * Math.PI ) );
   
   return {x: x, y: y};
+}
+
+function GetLocation(x, y)
+{
+  x = (x/zoom + offsetX);
+  y = (y/zoom + offsetY);
+
+  y = CH - y;
+  let latitude  = 0; // (φ)
+  let longitude = 0; // (λ)
+
+  let mapWidth  = CW;
+  let mapHeight = CH;
+
+  longitude = ( x / ( mapWidth / longLines ) ) - long0;
+  if(longitude < -long0) longitude = -long0;
+  if(longitude > (longLines-long0)) longitude = (longLines-long0);
+  // console.log('longitude is ' + longitude);
+
+  let mercN = ( 2 * Math.PI ) * ( mapHeight / 2 - y ) / mapWidth;
+  let latRad = 2 * ( Math.atan(Math.exp(mercN)) - ( Math.PI / 4 ) );
+  latitude = latRad * 180 / Math.PI;
+  latitude = -latitude;
+  if(latitude < -90) latitude = -90;
+  if(latitude > 90) latitude = 90;
+  // console.log('latitude is ' + latitude);
+
+  geo.x = longitude;
+  geo.y = latitude;
+
+  LOCATION.innerHTML = latitude.toFixed(5) + ' , ' + longitude.toFixed(5);
+}
+
+function ResetOffset(out)
+{
+  console.log(geo);
+  console.log(zoom);
+  if(out) // if zooming out, i.e. reducing zoom
+  {
+    let oX = offsetX / (zoom + 1);
+    let oY = offsetY / (zoom + 1);
+    offsetX = oX * zoom;
+    offsetY = oY * zoom;
+  }
+  else
+  {
+    let oX = offsetX / (zoom - 1);
+    let oY = offsetY / (zoom - 1);
+    offsetX = oX * zoom;
+    offsetY = oY * zoom;
+  }
 }
 
 window.addEventListener('resize', Draw);
