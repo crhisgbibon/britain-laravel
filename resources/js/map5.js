@@ -94,14 +94,15 @@ let levels = [
   [ CW / 20, CH / 20 ],
 ];
 
-let width = window.innerWidth * 0.95,
-    height = window.innerHeight * 0.95,
+let width = window.innerWidth,
+    height = window.innerHeight,
+    buffer = 1,
     lat, // n-s
     long, // e-w
-    latLines = 142.118483, // -57 83.6 = 140.6
+    latLines = 142.118483,
     longLines = 359.5981466,
-    lat0 = 83.63001, // 83.63001
-    long0 = 169.1110266, // 169.1110266
+    lat0 = 83.63001,
+    long0 = 169.1110266,
     x0 = 0,
     y0 = 0,
     north,
@@ -193,8 +194,8 @@ window.onmousemove = function(event)
 
   geo.x = x;
   geo.y = y;
-  // console.log('geo is ' + geo.x + ', ' + geo.y);
-  GetLocation();
+  console.log('geo is ' + geo.x + ', ' + geo.y);
+  GetLocation(geo.x, geo.y);
 
   if(!dragging) return;
 
@@ -206,8 +207,36 @@ window.onmousemove = function(event)
   Draw();
 }
 
-function GetLocation()
+function GetLocation(x, y)
 {
+  // x = x - offsetX;
+  // y = y - offsetY;
+  let latitude  = 0; // (φ)
+  let longitude = 0; // (λ)
+
+  let mapWidth  = CW;
+  let mapHeight = CH;
+
+  // get longitude value
+  // let x = ( longitude + long0 ) * ( mapWidth / longLines );
+  longitude = ( x / ( mapWidth / longLines ) ) - long0;
+  if(longitude < -long0) longitude = -long0;
+  if(longitude > (longLines-long0)) longitude = (longLines-long0);
+  console.log('longitude is ' + longitude);
+
+  let mercN = ( ( mapHeight / 2 ) * ( 2 * Math.PI ) ) / mapWidth;
+
+  
+
+
+  // convert from degrees to radians
+  // let latRad = latitude * Math.PI / 180;
+
+  // // get y value
+  // let mercN = Math.log( Math.tan( ( Math.PI / 4 ) + ( latRad / 2 ) ) );
+  // let y = ( mapHeight / 2 ) - ( mapWidth * mercN / ( 2 * Math.PI ) );
+  
+  // return {x: x, y: y};
   // let north = offsetY;
   // let south = offsetY + levels[zoom - 1][1];
   // let east = offsetX;
@@ -251,8 +280,8 @@ function ResetView()
 
 function Draw()
 {
-  width = window.innerWidth * 0.95;
-  height = window.innerHeight * 0.95;
+  width = window.innerWidth * buffer;
+  height = window.innerHeight * buffer;
 
   lat = CH / latLines;
   long = CW / longLines;
@@ -263,10 +292,13 @@ function Draw()
   C.width = CW;
   C.height = CH;
 
-  if(CW < width) CONTAINER.style.width = CW + 'px';
-  else CONTAINER.style.width = width + 'px';
-  if(CH < height) CONTAINER.style.height = CH + 'px';
-  else CONTAINER.style.height = height + 'px';
+  CONTAINER.style.width = width + 'px';
+  CONTAINER.style.height = height + 'px';
+
+  // if(CW < width) CONTAINER.style.width = CW + 'px';
+  // else CONTAINER.style.width = width + 'px';
+  // if(CH < height) CONTAINER.style.height = CH + 'px';
+  // else CONTAINER.style.height = height + 'px';
 
   let ph = ( 100 / CH ) * height;
   let pw = ( 100 / CW ) * width;
@@ -284,12 +316,8 @@ function Draw()
     width = ( CW * fit );
   }
 
-  console.log(offsetX);
-
   if(offsetX < -50) offsetX = -50;
   // if(offsetX > (150 * zoom)) offsetX = (150 * zoom);
-
-  console.log(offsetY);
 
   if(offsetY < -50) offsetY = -50;
   // if(offsetY > (150 * zoom)) offsetY = (150 * zoom);
@@ -297,14 +325,14 @@ function Draw()
   CANVAS.clearRect(0, 0, CW, CH);
   CANVAS.drawImage(I, ( 0 + offsetX ) , ( 0 + offsetY ), ( CW / zoom ), ( CH / zoom ), 0, 0, CW, CH);
 
-  CANVAS.strokeStyle = 'black';
-  CANVAS.beginPath();
-  CANVAS.moveTo((CW/2 - offsetX)*zoom, (0 - offsetY)*zoom);
-  CANVAS.lineTo((CW/2 - offsetX)*zoom, (CH - offsetY)*zoom);
-  CANVAS.stroke();
-  CANVAS.moveTo((0 - offsetX)*zoom, (CH/2 - offsetY)*zoom);
-  CANVAS.lineTo((CW - offsetX)*zoom, (CH/2 - offsetY)*zoom);
-  CANVAS.stroke();
+  // CANVAS.strokeStyle = 'black';
+  // CANVAS.beginPath();
+  // CANVAS.moveTo((CW/2 - offsetX)*zoom, (0 - offsetY)*zoom);
+  // CANVAS.lineTo((CW/2 - offsetX)*zoom, (CH - offsetY)*zoom);
+  // CANVAS.stroke();
+  // CANVAS.moveTo((0 - offsetX)*zoom, (CH/2 - offsetY)*zoom);
+  // CANVAS.lineTo((CW - offsetX)*zoom, (CH/2 - offsetY)*zoom);
+  // CANVAS.stroke();
 
   // CANVAS.strokeStyle = 'rgba(150,0,0,0.05)';
   // for(let i = 0; i < latLines + 1; i++)
@@ -323,10 +351,10 @@ function Draw()
   //   CANVAS.stroke();
   // }
 
-  CANVAS.fillStyle = 'red';
-  let pos0 = MapPos(0, 0);
+  // CANVAS.fillStyle = 'red';
+  // // let pos0 = MapPos(0, 0);
+  // CANVAS.fillRect(((pos0.x-offsetX)*zoom)-2.5, ((pos0.y-offsetY)*zoom)-2.5, 5, 5);
 
-  CANVAS.fillRect(((pos0.x-offsetX)*zoom)-2.5, ((pos0.y-offsetY)*zoom)-2.5, 5, 5);
   CANVAS.fillStyle = 'black';
   for(let i = 0; i < cities.length; i++)
   {
@@ -355,7 +383,7 @@ function MapPos(latitude, longitude)
   let mapHeight = CH;
 
   // get x value
-  let x = ( longitude + long0 ) * ( mapWidth / longLines )
+  let x = ( longitude + long0 ) * ( mapWidth / longLines );
 
   // convert from degrees to radians
   let latRad = latitude * Math.PI / 180;

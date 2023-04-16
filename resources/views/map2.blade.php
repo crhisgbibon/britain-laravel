@@ -13,8 +13,8 @@
     <body class="antialiased">
 
       <div class='flex justify-center items-center' style='background-color: #ddffff; height: calc(var(--vh) * 100); width: 100%;'>
-        <div id='container' style='position: absolute; border: 1px solid red; overflow: hidden;'>
-          <canvas id='c' style='background-color: #ddffff; border: 1px solid black; z-index: -1;'></canvas>
+        <div id='container' style='position: absolute; overflow: hidden;'>
+          <canvas id='c' class='mx-auto' style='background-color: #ddffff; border: 1px solid #b6f4a8; z-index: -1;'></canvas>
         </div>
       </div>
 
