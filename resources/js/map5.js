@@ -76,6 +76,8 @@ let width = window.innerWidth,
     height = window.innerHeight,
     vh = 0.975,
     buffer = 1,
+    bufferX = 50,
+    bufferY = 50,
     lat, // n-s
     long, // e-w
     latLines = 142.118483,
@@ -93,32 +95,49 @@ let width = window.innerWidth,
     offsetY = 0,
     dragging = false,
     start = new Vector(0, 0),
-    end = new Vector(0, 0),
-    geo = new Vector(0, 0);
+    end   = new Vector(0, 0),
+    geo   = new Vector(0, 0),
+    map   = new Vector(0, 0);
 
 
 let levels = [];
 for(let i = 0; i < levelCount; i++)
 {
   let n = i + 1;
-  let l = [CW / n, CH / n];
+  let l = [CW / n, CH / n]; // long, lat
   levels.push(l);
 }
 
 const I = document.createElement('img');
 I.onload = function () {
-  Draw();
+  Draw(false, false);
 }
 I.src = 'worldHigh.svg';
 
 window.onkeydown = function(event)
 {
+  if(event.key === 'g')
+  {
+    // console.log('zoom is ' + zoom);
+    console.log('mapX is ' + map.x);
+    console.log('mapY is ' + map.y);
+    // console.log('geoX is ' + geo.x);
+    // console.log('geoY is ' + geo.y);
+    // console.log('levelX is ' + levels[zoom][0] / 2);
+    // console.log('levelY is ' + levels[zoom][1] / 2);
+    console.log('offsetX is ' + offsetX);
+    console.log('offsetY is ' + offsetY);
+    console.log('calc offsetX is ' + (map.x - levels[zoom][1]/2));
+    console.log('calc offsetY is ' + (map.y - levels[zoom][0]/2));
+    return;
+  }
+
+  let out = true;
   if(event.key === '=' || event.key === '+')
   {
     if(zoom > minZoom)
     {
       zoom--;
-      ResetOffset(true);
     }
   }
 
@@ -127,7 +146,7 @@ window.onkeydown = function(event)
     if(zoom < maxZoom)
     {
       zoom++;
-      ResetOffset(false);
+      out = false;
     }
   }
 
@@ -135,17 +154,17 @@ window.onkeydown = function(event)
   {
     ResetView();
   }
-  Draw();
+  Draw(true, out);
 }
 
 window.onwheel = function(event)
 {
+  let out = true;
   if(event.deltaY > 0)
   {
     if(zoom > minZoom)
     {
       zoom--;
-      ResetOffset(true);
     }
   }
   if(event.deltaY < 0)
@@ -153,10 +172,10 @@ window.onwheel = function(event)
     if(zoom < maxZoom)
     {
       zoom++;
-      ResetOffset(false);
+      out = false;
     }
   }
-  Draw();
+  Draw(true, out);
 }
 
 window.onmousedown = function(event)
@@ -170,7 +189,7 @@ window.onmousedown = function(event)
   start.y = y;
   dragging = true;
 
-  Draw();
+  Draw(false, false);
 }
 
 window.onmousemove = function(event)
@@ -182,7 +201,9 @@ window.onmousemove = function(event)
   let y = event.clientY - rect.top;
 
   GetLocation(x, y);
-
+  map.x = x/zoom - bufferX + offsetX;
+  map.y = y/zoom - bufferY + offsetY;
+  // console.log(x, y);
   if(!dragging) return;
 
   end.x = x;
@@ -190,7 +211,7 @@ window.onmousemove = function(event)
   Drag();
   start.x = x;
   start.y = y;
-  Draw();
+  Draw(false, false);
 }
 
 window.onmouseup = function(event)
@@ -204,7 +225,7 @@ window.onmouseup = function(event)
   end.y = y;
   Drag();
   dragging = false;
-  Draw();
+  Draw(false, false);
 }
 
 function Drag()
@@ -223,7 +244,7 @@ function ResetView()
   zoom = 1;
 }
 
-function Draw()
+function Draw(zoomed, out)
 {
   width = window.innerWidth * buffer;
   height = (window.innerHeight * vh) * buffer;
@@ -261,14 +282,41 @@ function Draw()
     width = ( CW * fit );
   }
 
-  if(offsetX < -50) offsetX = -50;
+  if(offsetX < -bufferX) offsetX = -bufferX;
   // if(offsetX > (150 * zoom)) offsetX = (150 * zoom);
 
-  if(offsetY < -50) offsetY = -50;
+  if(offsetY < -bufferY) offsetY = -bufferY;
   // if(offsetY > (150 * zoom)) offsetY = (150 * zoom);
+
+  if(zoomed)
+  {
+    // console.log(out);
+    // console.log(geo);
+    // console.log(zoom);
+    // console.log(offsetX);
+    // console.log(offsetY);
+    if(out) // if zooming out, i.e. reducing zoom
+    {
+    }
+    else
+    {
+      // map distance between 0 point after scroll and target
+      // offsetX = map.x / zoom;
+      // offsetY = map.y / zoom;
+    }
+  }
 
   CANVAS.clearRect(0, 0, CW, CH);
   CANVAS.drawImage(I, ( 0 + offsetX ) , ( 0 + offsetY ), ( CW / zoom ), ( CH / zoom ), 0, 0, CW, CH);
+
+  CANVAS.strokeStyle = 'black';
+  CANVAS.beginPath();
+  CANVAS.moveTo((CW/2), (0));
+  CANVAS.lineTo((CW/2), (CH));
+  CANVAS.stroke();
+  CANVAS.moveTo((0), (CH/2));
+  CANVAS.lineTo((CW), (CH/2));
+  CANVAS.stroke();
 
   // CANVAS.strokeStyle = 'black';
   // CANVAS.beginPath();
@@ -300,7 +348,17 @@ function Draw()
   // // let pos0 = MapPos(0, 0);
   // CANVAS.fillRect(((pos0.x-offsetX)*zoom)-2.5, ((pos0.y-offsetY)*zoom)-2.5, 5, 5);
 
-  CANVAS.fillStyle = 'black';
+  let arcsize = zoom;
+  let textsize = zoom;
+  if(arcsize < 3) arcsize = 3;
+  if(arcsize > 15) arcsize = 15;
+  if(textsize < 8) textsize = 8;
+  if(textsize > 24) textsize = 24;
+
+  CANVAS.fillStyle = 'rgb(50,50,50)';
+  CANVAS.font = textsize + "px Arial";
+  CANVAS.textAlign = "start";
+  CANVAS.textBaseline = 'middle';
   for(let i = 0; i < cities.length; i++)
   {
     let name = cities[i][0];
@@ -314,8 +372,10 @@ function Draw()
 
     // console.log(name + ',' + xPos + ',' + yPos);
 
-    CANVAS.fillRect(xPos, yPos, 5, 5);
-    CANVAS.fillText(name, xPos, yPos);
+    CANVAS.beginPath();
+    CANVAS.arc(xPos, yPos, arcsize, 0, 2 * Math.PI);
+    CANVAS.fill();
+    CANVAS.fillText(name, xPos + ( arcsize ), yPos);
   }
 }
 
@@ -365,27 +425,9 @@ function GetLocation(x, y)
   geo.x = longitude;
   geo.y = latitude;
 
-  LOCATION.innerHTML = latitude.toFixed(5) + ' , ' + longitude.toFixed(5);
-}
+  LOCATION.innerHTML = latitude.toFixed(5) + ' , ' + longitude.toFixed(5) + ', ' + zoom + 'x';
 
-function ResetOffset(out)
-{
-  console.log(geo);
-  console.log(zoom);
-  if(out) // if zooming out, i.e. reducing zoom
-  {
-    let oX = offsetX / (zoom + 1);
-    let oY = offsetY / (zoom + 1);
-    offsetX = oX * zoom;
-    offsetY = oY * zoom;
-  }
-  else
-  {
-    let oX = offsetX / (zoom - 1);
-    let oY = offsetY / (zoom - 1);
-    offsetX = oX * zoom;
-    offsetY = oY * zoom;
-  }
+  return new Vector(latitude, longitude);
 }
 
 window.addEventListener('resize', Draw);

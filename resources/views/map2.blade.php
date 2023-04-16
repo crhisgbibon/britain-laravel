@@ -3,7 +3,7 @@
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Britain</title>
+      <title>World</title>
       @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/vh.js', 'resources/js/map5.js'])
       <!-- Styles -->
       <style>
@@ -16,9 +16,8 @@
         <div id='location' class='flex justify-center items-center' style='height: 100%; width: 100%; z-index: 1;'>hello</div>
       </div>
 
-
-      <div id='container' class='' style='height: calc(var(--vh) * 97.5);top:0; overflow: hidden; z-index: -2;'>
-        <canvas id='c' class='mx-auto' style='top:0; background-color: #ddffff; border: 1px solid #b6f4a8; z-index: -3;'></canvas>
+      <div id='container' class='' style='overflow: hidden; z-index: -2;'>
+        <canvas id='c' class='mx-auto' style='background-color: #ddffff; z-index: -3;'></canvas>
       </div>
 
     </body>
