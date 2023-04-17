@@ -13,7 +13,7 @@
     <body class="antialiased" style='background-color: #323232; max-height: calc(var(--vh) * 100); max-width: 100%; overflow: hidden;'>
 
       <div id='controls' style='background-color: #323232; height: calc(var(--vh) * 2.5); top: 0; color: rgb(200,200,200);'>
-        <div id='location' class='flex justify-center items-center' style='height: 100%; width: 100%; z-index: 1;'>hello</div>
+        <div id='location' class='flex justify-center items-center' style='height: 100%; width: 100%; z-index: 1;'></div>
       </div>
 
       <div id='container' class='' style='overflow: hidden; z-index: -2;'>
