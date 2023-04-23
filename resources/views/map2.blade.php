@@ -3,6 +3,7 @@
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="icon" href="favicon.ico">
       <title>World</title>
       @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/vh.js', 'resources/js/map5.js'])
       <!-- Styles -->
