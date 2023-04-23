@@ -20,8 +20,7 @@
 				stroke-width:0.5;
 			}
       #GB{
-        fill: #013220;
-        stroke: #013220;
+        
       }
 		</style>
 
